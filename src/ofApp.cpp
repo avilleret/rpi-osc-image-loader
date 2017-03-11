@@ -4,7 +4,6 @@
 void ofApp::setup(){
   ofSetLogLevel(OF_LOG_VERBOSE);
   ofHideCursor();
-  ofDirectory dir;
   dir.allowExt("png");
   dir.allowExt("jpg");
   dir.allowExt("gif");
@@ -15,19 +14,23 @@ void ofApp::setup(){
 #endif
   dir.sort(); // in linux the file system doesn't return file lists ordered in alphabetical order
 
+  if (dir.size()) image.load(dir.getPath(0));
+
+  /*
   //allocate the vector to have as many ofImages as files
   if( dir.size() ){
     images.assign(dir.size(), ofImage());
   }
+  */
 
   // you can now iterate through the files and load them into the ofImage vector
   for(int i = 0; i < (int)dir.size(); i++){
     ofLogNotice("setup") << "Loading image " << i << " " << dir.getName(i);
-    bool res = images[i].load(dir.getPath(i));
-    if (res) map[dir.getName(i)] = i;
-    else ofLogError("setup") << "can't load image " << dir.getName(i);
+    // bool res = images[i].load(dir.getPath(i));
+    map[dir.getName(i)] = i;
+    // else ofLogError("setup") << "can't load image " << dir.getName(i);
   }
-  ofLogNotice("setup") << images.size() << " images loaded";
+  // ofLogNotice("setup") << images.size() << " images loaded";
 
   receiver.setup(9000);
 }
@@ -45,7 +48,7 @@ void ofApp::update(){
                  case OFXOSC_TYPE_FLOAT:
                  case OFXOSC_TYPE_DOUBLE:
                     currentImage = m.getArgAsInt(0);
-                    currentImage %= images.size();
+                    currentImage %= dir.size();
                     break;
                 case OFXOSC_TYPE_STRING:
                 case OFXOSC_TYPE_SYMBOL:
@@ -65,9 +68,13 @@ void ofApp::update(){
                 ofLogError(__func__) << "you should send at least one argument (int or string)";
             }
 
-        } else if ( m.getAddress() == "/next") currentImage = (currentImage+1) % images.size();
-        else if ( m.getAddress() == "/prev") currentImage = (currentImage-1) % images.size();
-        ofLogVerbose("update") << "currentImage " << currentImage;
+        } else if ( m.getAddress() == "/next") currentImage = (currentImage+1) % dir.size();
+        else if ( m.getAddress() == "/prev") currentImage = (currentImage-1) % dir.size();
+        if (lastImage != currentImage){
+          image.load(dir.getPath(currentImage));
+          lastImage = currentImage;
+        }
+        ofLogVerbose("update") << "currentImage " << currentImage << " " << dir.getPath(currentImage);
     }
 }
 
@@ -75,7 +82,7 @@ void ofApp::update(){
 void ofApp::draw(){
     ofClear(ofColor::black);
     ofSetColor(ofColor::white);
-    if (images.size()) images[currentImage].draw(0,0,ofGetWidth(),ofGetHeight());
+    if (image.isAllocated()) image.draw(0,0,ofGetWidth(),ofGetHeight());
 }
 
 //--------------------------------------------------------------

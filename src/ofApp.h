@@ -24,9 +24,10 @@ class ofApp : public ofBaseApp{
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
-    vector<ofImage> images;
-    int currentImage=0;
+    ofImage image;
+    int currentImage=0, lastImage=-1;
     std::map<std::string,int> map;
     ofxOscReceiver receiver;
+    ofDirectory dir;
   };
 
